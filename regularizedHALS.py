@@ -56,12 +56,12 @@ class regHALS(object):
         if self.init == 'random':
             m, n = Y.shape
             A = np.random.rand(m, self.k)
-            X = np.ones((self.k, n))
+            X = np.zeros((self.k, n))
 
-            AX = np.dot(A, X).flatten()
-            alpha = np.dot(Y.flatten(), AX) / np.dot(AX, AX)
-            A /= np.sqrt(np.abs(alpha) + 1E-10)
-            X /= np.sqrt(np.abs(alpha) + 1E-10)
+            #AX = np.dot(A, X).flatten()
+            #alpha = np.dot(Y.flatten(), AX) / np.dot(AX, AX)
+            #A /= np.sqrt(np.abs(alpha) + 1E-10)
+            #X /= np.sqrt(np.abs(alpha) + 1E-10)
         elif self.init == 'convex':
             out = convex_cone(Y, self.k)
             X = np.array(out['base'])
