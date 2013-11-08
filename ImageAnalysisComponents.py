@@ -241,13 +241,13 @@ class RelativeChange():
         return relative_change
 
 class sICA():
-    ''' performes spatial ICA
+    '''performes spatial ICA
     
     if num_components <=1, it gives amount variance to be kept,
     if num_components >1, it is the number of components
     '''
 
-    def __init__(self, num_components=1):
+    def __init__(self, num_components=1, **kwargs):
         self.variance = num_components
 
     def __call__(self, timeseries):
@@ -291,6 +291,10 @@ class sICA():
         return out
 
 class NNMF():
+    """Performs NMF decomposition
+    
+    for parameters see documentation of regularizedHALS.regHALS
+    """
 
     def __init__(self, num_components=100, **param):
         self.param = param
@@ -317,9 +321,7 @@ class NNMF():
         return out
 
 class RoiActivation():
-    ''' extracts timecourse from ROI masks
-
-    '''
+    """extracts timecourse from ROI masks """
 
     def __init__(self, masks, label_objects=None, integrator=np.mean):
         self.masks = masks
@@ -349,7 +351,6 @@ class SingleSampleResponse():
 
     attention: reorders labels
     '''
-
 
     def __init__(self, method=np.mean):
         self.method = method
