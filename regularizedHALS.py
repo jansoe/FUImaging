@@ -25,13 +25,44 @@ def convex_cone(data, latents):
 
     return res
 
-
+# Different sparsnes norms
 NORMS = {'global_sparse': lambda new_vec, x: np.sum(x, 0),
          'local_sparse': lambda new_vec, x: 1}
 
 class regHALS(object):
+    """NMF with regularized HALS algorithm"""
 
     def __init__(self, num_comp, **kwargs):
+        """
+        Parameter
+        ---------
+        num_comp: int
+            number of components/latents in the factorization
+        
+        Keyword Args
+        ------------
+        maxcount: int, default 100 
+            maximal number of iterations
+        smooth_param: float, default 0
+            strength of smoothness regularisation
+        sparse_param: float, default 0
+            strength of sparseness regularisation
+        sparse_fct: str, default 'global_sparse'
+            * 'global_sparse': sparseness regularisation over all components
+            * 'local_sparse': sparseness regularisation within a component 
+        neg_time: bool, default False
+            it True negative activations are allowed
+        init: 'convex' or 'random', default 'convex'
+            inital guess of factorization
+        eps: float, default 1E-5
+            value to avoid divisions by zero
+        verbose: int, default 0
+           number of iterations with output to stdout
+        shape: 2-tuple of int
+           shape of input images for calculating neigborhood matrix
+   
+        """
+
         self.k = num_comp
         self.maxcount = kwargs.get('maxcount', 100)
         self.eps = kwargs.get('eps', 1E-5)
@@ -45,30 +76,65 @@ class regHALS(object):
         self.basenorm = kwargs.get("basenorm", lambda x:1)
         self.sparse_fct = NORMS[kwargs.get("sparse_fct", 'global_sparse')]
 
+    def fit(self, Y):
+        """perform NMF of Y until stop criterion """
+        self.psi = 1E-12 # numerical stabilization
+        YT = Y.T
 
-    def frob_dist(self, Y, A, X):
-        """ frobenius distance between Y and A X """
-        return np.linalg.norm(Y - np.dot(A, X))
+        A, X = self.init_factors(Y)
+        # create neighborhood matrix
+        if self.smooth_param:
+            self.S = self.create_nn_matrix()
+
+        count = 0
+        obj_old = 1e99
+        nrm_Y = np.linalg.norm(Y)
+
+        if self.verbose:
+            print 'init completed'
+
+        while True:
+            if count >= self.maxcount: break
+            count += 1
+
+            A, X = self.update(Y, YT, A, X)
+            obj = np.linalg.norm(Y - np.dot(A, X)) / nrm_Y
+
+            delta_obj = obj - obj_old
+            if self.verbose:
+                if count % self.verbose == 0:
+                    print "count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj)
+
+            # delta_obj should be "almost negative" and small enough:
+            if -self.eps < delta_obj <= 0:
+                break
+
+            obj_old = obj
+
+        if self.verbose:
+            print "FINISHED:"
+            print "count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj)
+
+        return A, X, obj
 
     def init_factors(self, Y):
-        """ generate start matrices U, V """
+        """ generate start matrices A, X """
 
         if self.init == 'random':
             m, n = Y.shape
             A = np.random.rand(m, self.k)
             X = np.zeros((self.k, n))
 
-            #AX = np.dot(A, X).flatten()
-            #alpha = np.dot(Y.flatten(), AX) / np.dot(AX, AX)
-            #A /= np.sqrt(np.abs(alpha) + 1E-10)
-            #X /= np.sqrt(np.abs(alpha) + 1E-10)
         elif self.init == 'convex':
             out = convex_cone(Y, self.k)
             X = np.array(out['base'])
             A = np.array(out['timecourses']).T
+
         return A, X
 
     def create_nn_matrix(self):
+        """creates neighborhood matrix"""
+
         nn_matrix = []
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
@@ -84,60 +150,8 @@ class regHALS(object):
                 nn_matrix.append(1.*temp.flatten() / np.sum(temp))
         return np.array(nn_matrix)
 
-
-    def fit(self, Y):
-
-        self.psi = 1E-12 # numerical stabilization
-        YT = Y.T
-
-        A, X = self.init_factors(Y)
-        # create neighborhodd matrix
-        if self.smooth_param:
-            self.S = self.create_nn_matrix()
-
-        count = 0
-        obj_old = 1e99
-        nrm_Y = np.linalg.norm(Y)
-
-        if self.verbose:
-            print 'init completed'
-
-        while True:
-            if count >= self.maxcount: break
-            A, X = self.update(Y, YT, A, X)
-
-            if np.any(np.isnan(A)) or np.any(np.isinf(A)) or \
-               np.any(np.isnan(X)) or np.any(np.isinf(X)):
-
-                if self.verbose: print "RESTART"
-                A, X = self.init_factors(Y, self.k)
-                count = 0
-
-            count += 1
-
-            # relative distance which is independeant to scaling of A
-            obj = self.frob_dist(Y, A, X) / nrm_Y
-
-            delta_obj = obj - obj_old
-            if self.verbose:
-                if count % self.verbose == 0:
-                    print "count=%6d obj=%E d_obj=%E" % (count, obj, delta_obj)
-
-
-            # delta_obj should be "almost negative" and small enough:
-            if -self.eps < delta_obj <= 0:
-                break
-
-            obj_old = obj
-
-
-        if self.verbose:
-            print "FINISHED:"
-            print "count=%6d obj=%E d_obj=%E" % (count, obj, delta_obj)
-
-        return A, X, obj
-
     def update(self, Y, YT, A, X):
+        """single update step"""
 
         E = Y - np.dot(A, X)
         for j in range(A.shape[1]):
@@ -146,7 +160,6 @@ class regHALS(object):
             xj = X[j, :]
 
             Rt = E + np.outer(aj, xj)
-
             xj = self.project_residuen(Rt.T, j, aj, self.sparse_param, self.smooth_param,
                                        X=X, sparse_fct=self.sparse_fct)
             xj /= self.basenorm(xj) + self.psi
@@ -165,6 +178,7 @@ class regHALS(object):
 
     def project_residuen(self, res, oldind, to_base, sparse_param=0,
                          smoothness=0, rectify=True, X=0, sparse_fct=''):
+        """performs local optimization"""
 
         new_vec = np.dot(res, to_base)
 
