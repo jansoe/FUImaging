@@ -68,11 +68,12 @@ def preprocess(ts, config):
 
     # cut baseline signal
     # TODO: set this as parameter
-    baseline = trial_mean(bf.CutOut((0, 2))(ts))
+    print ts._series.shape
+    baseline = trial_mean(bf.CutOut((0, 10))(ts))
 
-    # temporal downsampling by factor 2
+    # temporal downsampling
     # TODO: set this as parameter
-    t_ds = 4
+    t_ds = 12
     ts = bf.TrialMean(ts.num_timepoints / t_ds)(ts)
     ts.framerate /= t_ds
     ts.stim_window = (np.floor(1.*ts.stim_window[0] / t_ds),
@@ -80,6 +81,8 @@ def preprocess(ts, config):
 
     # compute relative change (w.r.t. baseline)
     ts = rel_change(ts, baseline)
+
+    ts._series *= -1000
 
     # spatial filtering
     if config['lowpass']:
@@ -94,10 +97,6 @@ def preprocess(ts, config):
 
     pp._series[np.isnan(pp._series)] = 0
     pp._series[np.isinf(pp._series)] = 0
-
-    # TODO: set this as parameter
-    factor = -1000
-    pp._series *= factor
 
     # TODO set this as parameter
     response_cut = (3, 5)
@@ -138,7 +137,7 @@ def raw_response_overview(out, fig, params):
 #ToDo reintegrate mf_overview plot
 
 def create_mf(mf_dic):
-    '''creates a matrixfactorization according to mf_dic specification'''
+    '''creates a matrix factorization according to mf_dic specification'''
     mf_methods = {'nnma':bf.NNMF, 'sica': bf.sICA}
     mf = mf_methods[mf_dic['method']](**mf_dic['param'])
     return mf
