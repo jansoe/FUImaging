@@ -1,1 +1,1 @@
-{"spatial_down": 2, "methods": {"sica": {}, "nnma": {"sparse_param": 1.3, "smooth_param": 3.0, "maxcount": 5}}, "format": "svg", "selected_method": "nnma", "n_modes": 200, "highpass": 10, "lowpass": 1}
+{"spatial_down": 2, "methods": {"sica": {}, "nnma": {"sparse_param": 0.5, "smooth_param": 2.0, "maxcount": 50}}, "format": "svg", "selected_method": "sica", "n_modes": 150, "highpass": 10, "lowpass": 1}
