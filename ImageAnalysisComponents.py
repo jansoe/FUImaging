@@ -145,7 +145,7 @@ class SampleConcat():
                 assert ts.label_objects == out.label_objects, 'objects do not match'
             out._series.append(ts._series)
             out.label_stimuli += ts.label_stimuli
-            out.name += ts.name
+            out.name.append(ts.name)
         # reduce
         if not(self.listout):
             out._series = np.vstack(out._series)
@@ -469,8 +469,6 @@ class ObjectConcat():
             out.base.label_stimuli = out.label_objects
         return out
 
-# helper functions
-
 class SelectObjects():
     ''' select objects with a mask '''
 
@@ -489,6 +487,7 @@ class SelectObjects():
 
         return out
 
+# helper functions
 def common_substr(data):
     substr = ''
     if len(data) > 1 and len(data[0]) > 0:
