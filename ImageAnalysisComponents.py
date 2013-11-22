@@ -165,8 +165,6 @@ class Combine():
 
 class SelectTrials():
     ''' selects trials bases on mask
-
-        !!! mask has to be boolean !!!
     '''
     def __init__(self):
         pass
@@ -175,7 +173,9 @@ class SelectTrials():
         selected_timecourses = timeseries.trial_shaped()[mask]
         out = timeseries.copy()
         out.set_series(selected_timecourses)
-        out.label_stimuli = [out.label_stimuli[i] for i in np.where(mask)[0]]
+
+        selection = np.where(mask)[0] if mask.dtype == bool else mask
+        out.label_stimuli = [out.label_stimuli[i] for i in selection]
         return out
 
 class Filter():
