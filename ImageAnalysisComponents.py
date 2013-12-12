@@ -394,22 +394,24 @@ class CalcStimulusDrive():
                 stim_pos[stimulus] = occurence
                 min_stimlen = np.nanmin([min_stimlen, len(occurence)])
 
-
-        # create list of lists, where each sublist contains for all stimuli one exclusive trial
-        indices = []
-        for i in range(int(min_stimlen)):
-            indices.append([j[i] for j in stim_pos.values()])
-        # create pseudo-trial timecourses
-        trial_timecourses = np.array([timeseries.trial_shaped()[i].reshape(-1, timeseries.num_objects) for i in indices])
-        # calculate correlation of pseudo-trials, aka stimulus dependency
-        cor = []
-        for object_num in range(timeseries.num_objects):
-            dists = pdist(trial_timecourses[:, :, object_num] + 1E-12 * np.random.randn(*trial_timecourses[:, :, object_num].shape), self.metric)
-            er = np.isnan(dists)
-            if np.sum(er) > 0:
-                print 'nan before', np.sum(np.isnan(trial_timecourses[:, :, object_num])), 'nan dist', np.sum(er)
-                dists[er] = 0
-            cor.append(np.mean(dists))
+        if not(np.isnan(min_stimlen)): #if double measurements exist
+            # create list of lists, where each sublist contains for all stimuli one exclusive trial
+            indices = []
+            for i in range(int(min_stimlen)):
+                indices.append([j[i] for j in stim_pos.values()])
+            # create pseudo-trial timecourses
+            trial_timecourses = np.array([timeseries.trial_shaped()[i].reshape(-1, timeseries.num_objects) for i in indices])
+            # calculate correlation of pseudo-trials, aka stimulus dependency
+            cor = []
+            for object_num in range(timeseries.num_objects):
+                dists = pdist(trial_timecourses[:, :, object_num] + 1E-12 * np.random.randn(*trial_timecourses[:, :, object_num].shape), self.metric)
+                er = np.isnan(dists)
+                if np.sum(er) > 0:
+                    dists[er] = 1
+                cor.append(np.mean(dists))
+        else: #no double measurements exist
+            print '!!! warning: no repeated stimuli!!!'
+            cor = np.ones(timeseries.num_objects)
         out = timeseries.copy()
         out._series = np.array(cor).reshape((1, -1))
         out.label_stimuli = [out.name]
