@@ -105,6 +105,7 @@ class TimeSeries(object):
 
     def copy(self):
         out = cp.copy(self)
+        out._series = cp.copy(self._series)
         out.label_stimuli = cp.copy(self.label_stimuli)
         out.label_objects = cp.copy(self.label_objects)
         out.typ = cp.copy(self.typ)
