@@ -8,26 +8,28 @@ from regularizedHALS import regHALS
 from os.path import abspath
 
 # available Filter and transformation of size argument
-FILT = {'median': sn.filters.median_filter, 'gauss':sn.filters.gaussian_filter,
-        'uniform':sn.filters.uniform_filter, 'erosion': sn.binary_erosion,
+FILT = {'median': sn.filters.median_filter, 'gauss': sn.filters.gaussian_filter,
+        'uniform': sn.filters.uniform_filter, 'erosion': sn.binary_erosion,
         'dilation': sn.binary_dilation, 'closing': sn.binary_closing}
+
+
 def _filter_struc(size):
     base = sn.generate_binary_structure(2, 1)
     struc = sn.iterate_structure(base, size)
     return struc
-FILTARG = {'median': lambda s: {'size':s},
-           'gauss':lambda s: {'sigma':s},
-           'uniform':lambda s: {'size':s},
-           'erosion':lambda s: {'structure':_filter_struc(s)},
-           'dilation':lambda s: {'structure':_filter_struc(s)},
-           'closing':lambda s: {'structure':_filter_struc(s)}
+FILTARG = {'median': lambda s: {'size': s},
+           'gauss': lambda s: {'sigma': s},
+           'uniform': lambda s: {'size': s},
+           'erosion': lambda s: {'structure': _filter_struc(s)},
+           'dilation': lambda s: {'structure': _filter_struc(s)},
+           'closing': lambda s: {'structure': _filter_struc(s)}
            }
 
 
 class TimeSeries(object):
     ''' basic data structure to hold imaging data and meta information
         !data must have same number of timepoints for each stimuli!
-        
+
        attributes
             * _series: np.array of actual data
                            dim0: samplepoints, dim1: objects (e.g. pixel)
@@ -35,10 +37,10 @@ class TimeSeries(object):
                      (e.g. (640, 480) for video data)
             * typ: list of strings, default empty
                    contains 'nested' if factorized
-                   contains 'group' if multiple pictures per samplepoint    
+                   contains 'group' if multiple pictures per samplepoint
 
 
-        
+
     '''
     def __init__(self, series='', shape=(), label_stimuli='', label_objects='',
                  name='', typ=[]):
@@ -74,8 +76,8 @@ class TimeSeries(object):
 
     def objects_sample(self, samplepoint):
         if 'multiple' in self.typ:
-            boundaries = np.cumsum([0] + [np.prod(s) for s in self.shape])
-            return [self._series[samplepoint, boundaries[ind]:boundaries[ind + 1]].reshape(self.shape[ind])
+            bound = np.cumsum([0] + [np.prod(s) for s in self.shape])
+            return [self._series[samplepoint, bound[ind]:bound[ind + 1]].reshape(self.shape[ind])
                                     for ind in range(len(self.shape))]
         else:
             print 'no multiple objects'
@@ -130,9 +132,9 @@ class TimeSeries(object):
             self.base.load(filename + '_base')
             self.base.label_stimuli = self.label_objects
 
+
 class SampleConcat():
     ''' concat list of timeserieses'''
-
 
     def __init__(self, listout=False):
         self.listout = listout
@@ -143,7 +145,7 @@ class SampleConcat():
         # collect objects
         for ts in timeseries_list:
             if not(self.listout):
-                assert ts.label_objects == out.label_objects, 'objects do not match'
+                assert ts.label_objects == out.label_objects, "obj don't match"
             out._series.append(ts._series)
             out.label_stimuli += ts.label_stimuli
             out.name.append(ts.name)
@@ -152,6 +154,7 @@ class SampleConcat():
             out._series = np.vstack(out._series)
         out.name = common_substr(out.name)
         return out
+
 
 class Combine():
     ''' combines two imageseries by cominefct '''
@@ -163,6 +166,7 @@ class Combine():
         change = timeseries1.copy()
         change._series = self.combine_fct(timeseries1._series, timeseries2._series)
         return change
+
 
 class SelectTrials():
     ''' selects trials bases on mask
@@ -179,6 +183,7 @@ class SelectTrials():
         out.label_stimuli = [out.label_stimuli[i] for i in selection]
         return out
 
+
 class Filter():
     ''' filter series with filterop in 2D'''
 
@@ -186,7 +191,6 @@ class Filter():
         self.downscale = downscale
         self.filterop = FILT[filterop]
         self.filterargs = FILTARG[filterop](size)
-
 
     def __call__(self, timeseries):
         filtered_images = []
@@ -201,6 +205,7 @@ class Filter():
         out._series = np.vstack(filtered_images)
         return out
 
+
 class CutOut():
     ''' cuts out images slice [cut_range[0], cut_range[1]) for each stim'''
 
@@ -211,6 +216,7 @@ class CutOut():
         image_cut = timeseries.copy()
         image_cut.set_series(image_cut.trial_shaped()[:, self.cut_range[0]:self.cut_range[1]])
         return image_cut
+
 
 class TrialMean():
     ''' splits each stim in equal n_parts and calculates their means'''
@@ -229,6 +235,7 @@ class TrialMean():
         out._series = np.vstack(averaged_im)
         return out
 
+
 class RelativeChange():
     ''' gives relative change of each stimulus to base_series '''
 
@@ -243,7 +250,7 @@ class RelativeChange():
 
 class sICA():
     '''performes spatial ICA
-    
+
     if num_components <=1, it gives amount variance to be kept,
     if num_components >1, it is the number of components
     '''
@@ -274,10 +281,6 @@ class sICA():
         new_norm = np.diag(base[:, np.argmax(np.abs(base), 1)])
         base /= new_norm.reshape((-1, 1))
         time *= new_norm
-        # ToDo change to highest base activation
-        #timesign = np.sign(np.sum(time, 0))
-        #time *= timesign
-        #base *= timesign.reshape((-1, 1))
 
         # construct final nested Timeseries object
         out = timeseries.copy()
@@ -293,7 +296,7 @@ class sICA():
 
 class NNMF():
     """Performs NMF decomposition
-    
+
     for parameters see documentation of regularizedHALS.regHALS
     """
 
@@ -490,6 +493,7 @@ class SelectObjects():
 
         return out
 
+
 # helper functions
 def common_substr(data):
     substr = ''
@@ -502,6 +506,7 @@ def common_substr(data):
     else:
         return data[0]
 
+
 def is_substr(find, data):
     if len(data) < 1 and len(find) < 1:
         return False
@@ -509,6 +514,7 @@ def is_substr(find, data):
         if find not in data[i]:
             return False
     return True
+
 
 def positions(target, source):
     '''Produce all positions of target in source'''
