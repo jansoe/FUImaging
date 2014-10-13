@@ -274,9 +274,8 @@ class sICA():
 
         # do ICA
         self.ica = sld.FastICA(whiten=False)
-        self.ica.fit(normed_base)
-        base = self.ica.sources_.T
-        time = np.dot(self.ica.get_mixing_matrix().T, normed_time).T
+        base = self.ica.fit_transform(normed_base).T
+        time = np.dot(self.ica.mixing_, normed_time).T
         # norm bases to 1
         new_norm = np.diag(base[:, np.argmax(np.abs(base), 1)])
         base /= new_norm.reshape((-1, 1))
