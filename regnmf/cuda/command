@@ -1,0 +1,2 @@
+#!/bin/bash
+nvcc --shared -o libnmf.so nmf.cu matrix.o -lcublas --compiler-options '-fPIC' 
