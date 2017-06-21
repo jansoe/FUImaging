@@ -42,13 +42,14 @@ class TimeSeries(object):
 
 
     '''
-    def __init__(self, series='', shape=(), label_stimuli='', label_objects='',
+    def __init__(self, series=None, shape=(), label_stimuli='', label_objects='',
                  name='', typ=[]):
         self.shape = shape
         self.label_stimuli = label_stimuli
         self.label_objects = label_objects
         self.typ = typ
-        self.set_series(series)
+        if not (series is None):
+            self.set_series(series)
         self.name = name
 
     @property
@@ -71,8 +72,8 @@ class TimeSeries(object):
             return np.prod(self.shape)
 
     def set_series(self, series):
-        if not(series == ''):
-            self._series = series.reshape(-1, self.num_objects)
+        assert type(series) != type(" "), "got string as series: regression! Fixme."
+        self._series = series.reshape(-1, self.num_objects)
 
     def objects_sample(self, samplepoint):
         if 'multiple' in self.typ:
