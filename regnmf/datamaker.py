@@ -53,7 +53,7 @@ def adjusted_gamma(mean, var):
     scale = var / mean
     shape = mean / scale
     if shape > 1:
-        print '!!! Warning !!! - shape parameter: ', str(shape)
+        print('!!! Warning !!! - shape parameter: ', str(shape))
     return gamma(shape, scale=scale)
 
 def crosscor(a1, a2):

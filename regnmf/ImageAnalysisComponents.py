@@ -6,6 +6,7 @@ import scipy.ndimage as sn
 import sklearn.decomposition as sld
 from regularizedHALS import regHALS
 from os.path import abspath
+from functools import reduce
 
 # available Filter and transformation of size argument
 FILT = {'median': sn.filters.median_filter, 'gauss': sn.filters.gaussian_filter,
@@ -80,13 +81,13 @@ class TimeSeries(object):
             return [self._series[samplepoint, bound[ind]:bound[ind + 1]].reshape(self.shape[ind])
                                     for ind in range(len(self.shape))]
         else:
-            print 'no multiple objects'
+            print('no multiple objects')
 
     def shaped2D(self):
         if not 'multiple' in self.typ:
             return self._series.reshape(-1, *self.shape)
         else:
-            print 'multiple object forms'
+            print('multiple object forms')
 
     def trial_shaped(self):
         return self._series.reshape(len(self.label_stimuli), -1, self.num_objects)
@@ -413,7 +414,7 @@ class CalcStimulusDrive():
                     dists[er] = 1
                 cor.append(np.mean(dists))
         else: #no double measurements exist
-            print '!!! warning: no repeated stimuli!!!'
+            print('!!! warning: no repeated stimuli!!!')
             cor = np.ones(timeseries.num_objects)
         out = timeseries.copy()
         out._series = np.array(cor).reshape((1, -1))
@@ -447,13 +448,13 @@ class ObjectConcat():
         if self.unequalsample:
             common = list(set(reduce(lambda x, y: set(x).intersection(y), [ts.label_stimuli for ts in timeserieses])))
             common.sort()
-            print 'common sample ', len(common)
+            print('common sample ', len(common))
         for ts in timeserieses:
             out = ts.copy()
             if self.unequalsample:
                 ind = [positions(lab, ts.label_stimuli)[:self.unequalsample] for lab in common]
                 ind = sum(ind, [])
-                print ts.name, ' reduced from ', len(ts.label_stimuli)
+                print(ts.name, ' reduced from ', len(ts.label_stimuli))
                 out.set_series(ts.trial_shaped()[ind])
                 timecourses.append(out.matrix_shaped())
             else:

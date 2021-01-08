@@ -92,7 +92,7 @@ class regHALS(object):
         nrm_Y = np.linalg.norm(Y)
 
         if self.verbose:
-            print 'init completed'
+            print('init completed')
 
         while True:
             if count >= self.maxcount: break
@@ -104,7 +104,7 @@ class regHALS(object):
             delta_obj = obj - obj_old
             if self.verbose:
                 if count % self.verbose == 0:
-                    print "count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj)
+                    print("count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj))
 
             # delta_obj should be "almost negative" and small enough:
             if -self.eps < delta_obj <= 0:
@@ -113,8 +113,8 @@ class regHALS(object):
             obj_old = obj
 
         if self.verbose:
-            print "FINISHED:"
-            print "count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj)
+            print("FINISHED:")
+            print("count=%3d obj=%E d_obj=%E" % (count, obj, delta_obj))
 
         return A, X, obj
 
