@@ -4,7 +4,7 @@ import json
 from scipy.spatial.distance import pdist
 import scipy.ndimage as sn
 import sklearn.decomposition as sld
-from regularizedHALS import regHALS
+from .regularizedHALS import regHALS
 from os.path import abspath
 from functools import reduce
 
@@ -72,7 +72,7 @@ class TimeSeries(object):
             return np.prod(self.shape)
 
     def set_series(self, series):
-        if not(series == ''):
+        if not(series is ''):
             self._series = series.reshape(-1, self.num_objects)
 
     def objects_sample(self, samplepoint):

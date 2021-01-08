@@ -130,12 +130,12 @@ class regHALS(object):
             out = convex_cone(Y, self.k)
             X = np.array(out['base'])
             A = np.array(out['timecourses']).T
-	
-	elif type(self.init) == dict:
-	    X = self.init['X']
-	    A = self.init['A']
-        
-	return A, X
+
+        elif type(self.init) == dict:
+            X = self.init['X']
+            A = self.init['A']
+
+        return A, X
 
     def create_nn_matrix(self):
         """creates neighborhood matrix"""
