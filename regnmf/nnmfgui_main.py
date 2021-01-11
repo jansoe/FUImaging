@@ -10,8 +10,7 @@ import os, glob, json, sys
 import ImageAnalysisComponents as bf
 import runlib_new
 # import QtStuff
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 # import GUILayout
@@ -150,7 +149,7 @@ class MainGui(QtGui.QMainWindow, Ui_MainGuiWin):
                 ts.stim_window = stim_window
                 ts.save(os.path.join(folder_path, 'timeseries'))
                 if progdialog.wasCanceled():
-                    print 'hui ui ui'
+                    print('hui ui ui')
                     break
 
             progdialog.setValue(len(to_convert))
@@ -180,7 +179,7 @@ class MainGui(QtGui.QMainWindow, Ui_MainGuiWin):
 
     def save_controls(self, export_file=''):
         '''after each click, save settings to config file'''
-        print 'save_controls called, export file is: %s' % export_file
+        print('save_controls called, export file is: %s' % export_file)
         config = {}
         config['lowpass'] = self.lowpass_spinner.value()
         config['highpass'] = self.highpass_spinner.value()
@@ -253,7 +252,7 @@ class MainGui(QtGui.QMainWindow, Ui_MainGuiWin):
         progdialog.setWindowModality(QtCore.Qt.WindowModal)
 
         for file_ind, filename in enumerate(self.filelist):
-            print self.fname, filename
+            print(self.fname, filename)
             progdialog.setValue(file_ind)
             if progdialog.wasCanceled():
                 break

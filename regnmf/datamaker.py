@@ -38,7 +38,7 @@ def group_covmtx(rho_intra, rho_inter, num_groups, num_objects):
     objects between groups have a covariance of rho_intra 
     '''
 
-    intra_mtx_size = (num_objects ** 2 - num_objects) / 2
+    intra_mtx_size = int((num_objects ** 2 - num_objects) / 2)
     intra_cov = 1 - squareform([1 - rho_intra] * intra_mtx_size)
 
     cov = rho_inter * np.ones((num_groups * num_objects, num_groups * num_objects))
@@ -53,7 +53,7 @@ def adjusted_gamma(mean, var):
     scale = var / mean
     shape = mean / scale
     if shape > 1:
-        print '!!! Warning !!! - shape parameter: ', str(shape)
+        print('!!! Warning !!! - shape parameter: ', str(shape))
     return gamma(shape, scale=scale)
 
 def crosscor(a1, a2):
@@ -88,7 +88,7 @@ class Dataset():
         pixel = np.indices(param['shape'])
         p_dist = param['shape'][0] / num_grid
         self.points = np.indices((num_grid, num_grid)) * p_dist + p_dist
-        self.points = zip(self.points[0].flatten(), self.points[1].flatten())
+        self.points = list(zip(self.points[0].flatten(), self.points[1].flatten()))
         random.shuffle(self.points)
         components = [gaussian_influence(mu, param['width'])(pixel[0], pixel[1])
                   for mu in self.points[:param['latents']]]
@@ -96,7 +96,7 @@ class Dataset():
 
         # generate activation timcourses
         covgroups = param.get('covgroups', 4)
-        self.cov = group_covmtx(param['cov'], 0.1, covgroups, param['latents'] / covgroups)
+        self.cov = group_covmtx(param['cov'], 0.1, covgroups, int(param['latents'] / covgroups))
         marginal_dist = adjusted_gamma(param['mean'], param['var'])
         self.activ_pre = correlated_samples(self.cov, param['no_samples'],
                                              marginal_dist).T

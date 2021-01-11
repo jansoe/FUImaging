@@ -68,7 +68,7 @@ def preprocess(ts, config):
 
     # cut baseline signal
     # TODO: set this as parameter
-    print ts._series.shape
+    print(ts._series.shape)
     baseline = trial_mean(bf.CutOut((0, 10))(ts))
 
     # temporal downsampling
